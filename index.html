@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2f6f4e" />
+  <title>Thuis Ontspullen</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="grow">
+      <h1>Thuis Ontspullen</h1>
+      <p class="subtitle">Per woning/ruimte, met bewaartermijn, foto's en agenda-export</p>
+    </div>
+    <div class="header-actions">
+      <label class="profile-picker">Woning/profiel
+        <select id="profileSelect" aria-label="Woning of profiel"></select>
+      </label>
+      <button id="installBtn" class="secondary hidden" type="button">Installeer app</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Navigatie">
+    <button class="tab active" data-view="dashboard" type="button">Overzicht</button>
+    <button class="tab" data-view="items" type="button">Items</button>
+    <button class="tab" data-view="ruimtes" type="button">Ruimtes</button>
+    <button class="tab" data-view="regels" type="button">Regels</button>
+    <button class="tab" data-view="instellingen" type="button">Instellingen</button>
+  </nav>
+
+  <main>
+    <section id="view-dashboard" class="view active">
+      <div class="cards" id="statsCards"></div>
+      <div class="panel">
+        <h2>Aandacht nodig</h2>
+        <p class="muted">Items met verstreken/bijna aflopende bewaartermijn of status “Te beoordelen”.</p>
+        <div id="attentionList" class="list"></div>
+      </div>
+      <div class="panel">
+        <h2>Mogelijke dubbele spullen</h2>
+        <p class="muted">Items met (bijna) dezelfde naam binnen het actieve profiel.</p>
+        <div id="duplicateList" class="list"></div>
+      </div>
+      <div class="panel">
+        <h2>Agenda / herinneringen</h2>
+        <p class="muted">Exporteer items met een bewaareinddatum als .ics-bestand voor je agenda.</p>
+        <div class="actions wrap">
+          <button id="exportIcsAllBtn" type="button">Exporteer alle deadlines (.ics)</button>
+          <button id="exportIcsAttentionBtn" type="button" class="secondary">Exporteer aandacht nodig (.ics)</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-items" class="view">
+      <div class="panel">
+        <h2 id="itemFormTitle">Nieuw item</h2>
+        <form id="itemForm" class="grid">
+          <input type="hidden" name="editId" id="editId" />
+          <label>Naam
+            <input name="naam" id="itemNaam" required maxlength="80" placeholder="Bijv. winterjas" />
+          </label>
+          <label>Ruimte
+            <select name="ruimteId" id="itemRuimte" required></select>
+          </label>
+          <label>Categorie
+            <input name="categorie" id="itemCategorie" maxlength="40" placeholder="Bijv. kleding" list="categorieSuggesties" />
+            <datalist id="categorieSuggesties"></datalist>
+          </label>
+          <label>Status
+            <select name="status">
+              <option value="te_beoordelen">Te beoordelen</option>
+              <option value="houden">Houden</option>
+              <option value="weggeven">Weggeven</option>
+              <option value="verkopen">Verkopen</option>
+              <option value="weggooien">Weggooien</option>
+            </select>
+          </label>
+          <label>Bewaartermijn (maanden)
+            <input name="bewaarMaanden" id="bewaarMaanden" type="number" min="0" step="1" placeholder="Bijv. 12" />
+          </label>
+          <label>Exacte einddatum (optioneel)
+            <input name="einddatum" id="einddatum" type="date" />
+          </label>
+          <label>Laatst gebruikt
+            <input name="laatstGebruikt" type="date" />
+          </label>
+          <label>Foto (lokaal, klein formaat aanbevolen)
+            <input name="foto" id="itemFoto" type="file" accept="image/*" />
+          </label>
+          <div class="full" id="fotoPreviewWrap"></div>
+          <label class="full">Notitie
+            <textarea name="notitie" rows="2" maxlength="400" placeholder="Optioneel"></textarea>
+          </label>
+          <p class="muted full" id="regelHint"></p>
+          <div class="actions full wrap">
+            <button type="submit" id="itemSubmitBtn">Item opslaan</button>
+            <button type="button" id="cancelEditBtn" class="secondary hidden">Annuleren</button>
+            <button type="reset" class="secondary">Wissen</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Alle items</h2>
+        <div class="filters">
+          <label class="grow">Zoeken
+            <input id="searchInput" type="search" placeholder="Zoek op naam, categorie, ruimte, notitie..." />
+          </label>
+          <label>Ruimte
+            <select id="filterRuimte"></select>
+          </label>
+          <label>Status
+            <select id="filterStatus">
+              <option value="">Alle</option>
+              <option value="te_beoordelen">Te beoordelen</option>
+              <option value="houden">Houden</option>
+              <option value="weggeven">Weggeven</option>
+              <option value="verkopen">Verkopen</option>
+              <option value="weggooien">Weggooien</option>
+              <option value="duplicaten">Mogelijke duplicaten</option>
+            </select>
+          </label>
+          <label>Sorteren
+            <select id="sortSelect">
+              <option value="nieuwste">Nieuwste eerst</option>
+              <option value="naam">Naam</option>
+              <option value="ruimte">Ruimte</option>
+              <option value="status">Status</option>
+              <option value="bewaartermijn">Bewaartermijn/einddatum</option>
+            </select>
+          </label>
+        </div>
+        <p class="muted" id="searchSummary"></p>
+        <div id="itemList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="view-ruimtes" class="view">
+      <div class="panel">
+        <h2>Nieuwe ruimte</h2>
+        <form id="ruimteForm" class="row">
+          <label class="grow">Naam
+            <input name="naam" required maxlength="50" placeholder="Bijv. zolder" />
+          </label>
+          <button type="submit">Toevoegen</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>Ruimtes in actieve woning</h2>
+        <div id="ruimteList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="view-regels" class="view">
+      <div class="panel">
+        <h2>Categorie-bewaarregels</h2>
+        <p class="muted">Stel per categorie een standaard bewaartermijn in. Bij een passende categorie kan de app dit voorstel invullen.</p>
+        <form id="regelForm" class="row">
+          <label class="grow">Categorie
+            <input name="categorie" required maxlength="40" placeholder="Bijv. kleding" />
+          </label>
+          <label>Maanden
+            <input name="maanden" type="number" min="0" step="1" required placeholder="12" />
+          </label>
+          <button type="submit">Regel opslaan</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>Actieve regels</h2>
+        <div id="regelList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="view-instellingen" class="view">
+      <div class="panel">
+        <h2>Woningen / profielen</h2>
+        <p class="muted">Gebruik meerdere profielen voor bijvoorbeeld thuis, kantoor, vakantiehuis of gezinsleden.</p>
+        <form id="profileForm" class="row">
+          <label class="grow">Nieuwe woning/profiel
+            <input name="naam" required maxlength="50" placeholder="Bijv. Thuis" />
+          </label>
+          <button type="submit">Toevoegen</button>
+        </form>
+        <div id="profileList" class="list"></div>
+      </div>
+      <div class="panel">
+        <h2>Gegevens</h2>
+        <p class="muted">Gegevens worden lokaal op dit apparaat opgeslagen. Foto's worden verkleind opgeslagen, maar veel foto's kunnen opslagruimte gebruiken.</p>
+        <div class="actions wrap">
+          <button id="exportBtn" type="button">Exporteer backup (JSON)</button>
+          <label class="button-like secondary">Importeer backup
+            <input id="importInput" type="file" accept="application/json" hidden />
+          </label>
+          <button id="resetBtn" type="button" class="danger">Wis alle gegevens</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Installeren / downloaden</h2>
+        <p class="muted">Open de app via een lokale webserver of hosting om installatie/service worker optimaal te laten werken. Je kunt de hele projectmap kopiëren of zippen.</p>
+        <p class="muted" id="swStatus"></p>
+      </div>
+    </section>
+  </main>
+
+  <template id="itemTemplate">
+    <article class="item">
+      <div class="item-media"></div>
+      <div class="item-main">
+        <strong class="item-name"></strong>
+        <div class="meta"></div>
+        <div class="badges"></div>
+        <p class="note"></p>
+      </div>
+      <div class="item-actions">
+        <select class="status-select" aria-label="Status wijzigen">
+          <option value="te_beoordelen">Te beoordelen</option>
+          <option value="houden">Houden</option>
+          <option value="weggeven">Weggeven</option>
+          <option value="verkopen">Verkopen</option>
+          <option value="weggooien">Weggooien</option>
+        </select>
+        <button class="secondary small ics-item" type="button">Agenda (.ics)</button>
+        <button class="secondary small edit-item" type="button">Bewerk</button>
+        <button class="secondary small delete-item" type="button">Verwijder</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

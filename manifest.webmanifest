@@ -1,0 +1,19 @@
+{
+  "name": "Thuis Ontspullen",
+  "short_name": "Ontspullen",
+  "description": "Ontspullen-app voor thuis, per ruimte en met bewaartermijn.",
+  "lang": "nl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f2",
+  "theme_color": "#2f6f4e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
